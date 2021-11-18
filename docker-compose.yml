@@ -4,6 +4,7 @@ services:
   torproxy:
     build:
       context: ./torproxy
+    restart: unless-stopped
     networks:
       pihole_net:
         ipv4_address: 10.0.0.4
