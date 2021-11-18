@@ -8,6 +8,10 @@ services:
     networks:
       pihole_net:
         ipv4_address: 10.0.0.4
+    volumes:
+      - type: volume
+        source: var-lib-tor
+        target: /var/lib/tor
   cloudflared:
     image: cloudflare/cloudflared:2021.11.0
     command: proxy-dns
@@ -20,6 +24,8 @@ services:
     networks:
       pihole_net:
         ipv4_address: 10.0.0.2
+    depends_on:
+      - torproxy
 
   pihole:
     image: pihole/pihole
@@ -61,3 +67,4 @@ networks:
 volumes:
   etc-dnsmasqd:
   etc-pihole:
+  var-lib-tor:
