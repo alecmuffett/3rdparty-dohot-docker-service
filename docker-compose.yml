@@ -36,7 +36,7 @@ services:
         volume:
           nocopy: true
     ports:
-# Configurte your LAN IP here
+# Configure your LAN IP here
 #      - "YOUR_LAN_IP_HERE:80:80/tcp"
 #      - "YOUR_LAN_IP_HERE:53:53/tcp"
 #      - "YOUR_LAN_IP_HERE:53:53/udp"
