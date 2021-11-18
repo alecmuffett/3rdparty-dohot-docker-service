@@ -1,0 +1,61 @@
+version: "3"
+
+services:
+  torproxy:
+    build:
+      context: ./torproxy
+    networks:
+      pihole_net:
+        ipv4_address: 10.0.0.4
+  cloudflared:
+    image: cloudflare/cloudflared:2021.11.0
+    command: proxy-dns
+    restart: unless-stopped
+    environment:
+    - "HTTPS_PROXY=socks5://10.0.0.4:9050/"
+    - "TUNNEL_DNS_UPSTREAM=https://1.1.1.1/dns-query,https://1.0.0.1/dns-query"
+    - "TUNNEL_DNS_PORT=5054"
+    - "TUNNEL_DNS_ADDRESS=10.0.0.2"
+    networks:
+      pihole_net:
+        ipv4_address: 10.0.0.2
+
+  pihole:
+    image: pihole/pihole
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: etc-dnsmasqd
+        target: /etc/dnsmasq.d/
+        volume:
+          nocopy: true
+      - type: volume
+        source: etc-pihole
+        target: /etc/pihole/
+        volume:
+          nocopy: true
+    ports:
+      - "100.75.48.66:80:80/tcp"
+      - "100.75.48.66:53:53/tcp"
+      - "100.75.48.66:53:53/udp"
+    environment:
+      - ServerIP=10.0.0.3
+      - PIHOLE_DNS_=10.0.0.2#5054
+      - TZ=Europe/London
+    networks:
+      pihole_net:
+        ipv4_address: 10.0.0.3
+    dns:
+      - 127.0.0.1
+    depends_on:
+      - cloudflared
+
+networks:
+  pihole_net:
+    ipam:
+      config:
+      - subnet: 10.0.0.0/29
+
+volumes:
+  etc-dnsmasqd:
+  etc-pihole:
