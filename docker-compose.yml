@@ -14,7 +14,7 @@ services:
       pihole_net:
         ipv4_address: 10.69.0.4
 
-#cloudflared handles using DOH, it is defered to by the pihole service for upstream DNS.
+##cloudflared handles using DOH, it is defered to by the pihole service for upstream DNS.
 #  dohproxy:
 #    image: cloudflare/cloudflared:2021.11.0 # no latest tag is provided, this may need manual updating...
 #    command: proxy-dns
@@ -30,7 +30,6 @@ services:
 #    depends_on:
 #      - torproxy
 
-#dnscrypt-proxy handles using DOH, it is defered to by the pihole service for upstream DNS.
   dohproxy:
     build:
       context: ./dnscrypt-proxy/
@@ -42,8 +41,8 @@ services:
         ipv4_address: 10.69.0.2
     
 
-# pihole provides DNS caching and configurable blocklists.
-# it also has a web interface for configuration, a random admin password is generated on first run.
+##pihole provides DNS caching and configurable blocklists.
+##it also has a web interface for configuration, a random admin password is generated on first run.
   pihole:
     image: pihole/pihole
     restart: unless-stopped
@@ -55,12 +54,12 @@ services:
         source: etc-pihole
         target: /etc/pihole/
 #    ports:
-# Configure your docker/container hosts LAN IP here
+##Configure your docker/container hosts LAN IP here
 #      - "YOUR_LAN_IP_HERE:80:80/tcp"
 #      - "YOUR_LAN_IP_HERE:53:53/tcp"
 #      - "YOUR_LAN_IP_HERE:53:53/udp"
-# commented out to avoid exposing 0.0.0.0, this should only be bound to a non-internet routable IP (or with appropriate upstream firewall rules to limit access)
-# this avoids your DNS server being used in DNS amplification DDOS attacks. https://www.rapid7.com/db/vulnerabilities/dns-amplification/
+##commented out to avoid exposing 0.0.0.0, this should only be bound to a non-internet routable IP (or with appropriate upstream firewall rules to limit access)
+##this avoids your DNS server being used in DNS amplification DDOS attacks. https://www.rapid7.com/db/vulnerabilities/dns-amplification/
     environment:
       - ServerIP=10.69.0.3
       - PIHOLE_DNS_=10.69.0.2#5054 # defer to cloudflared for DNS upstream.
