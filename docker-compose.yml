@@ -60,6 +60,7 @@ services:
 #      - "YOUR_LAN_IP_HERE:53:53/udp"
 ##commented out to avoid exposing 0.0.0.0, this should only be bound to a non-internet routable IP (or with appropriate upstream firewall rules to limit access)
 ##this avoids your DNS server being used in DNS amplification DDOS attacks. https://www.rapid7.com/db/vulnerabilities/dns-amplification/
+##alternatively, your host can use 10.69.0.3 as your resolver.
     environment:
       - ServerIP=10.69.0.3
       - PIHOLE_DNS_=10.69.0.2#5054 # defer to cloudflared for DNS upstream.
