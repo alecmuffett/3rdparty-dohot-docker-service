@@ -7,4 +7,6 @@ COPY dnscrypt-proxy.toml /dnscrypt-proxy.toml
 RUN addgroup -S dnscrypt && adduser -S dnscrypt -G dnscrypt
 USER dnscrypt
 RUN apk add --no-cache ca-certificates
+EXPOSE 5054/udp
+EXPOSE 5054/tcp
 ENTRYPOINT [ "/dnscrypt-proxy" ]
