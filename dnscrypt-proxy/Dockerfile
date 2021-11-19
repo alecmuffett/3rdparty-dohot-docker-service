@@ -5,8 +5,8 @@ FROM alpine
 COPY --from=build /go/bin/dnscrypt-proxy /dnscrypt-proxy
 COPY dnscrypt-proxy.toml /dnscrypt-proxy.toml
 RUN addgroup -S dnscrypt && adduser -S dnscrypt -G dnscrypt
-USER dnscrypt
 RUN apk add --no-cache ca-certificates
+USER dnscrypt
 EXPOSE 5054/udp
 EXPOSE 5054/tcp
 ENTRYPOINT [ "/dnscrypt-proxy" ]
