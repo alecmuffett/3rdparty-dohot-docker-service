@@ -1,32 +1,37 @@
 version: "3"
 
 services:
+# torproxy is used to route cloudflared's DNS over HTTP requests to the configured `TUNNEL_DNS_UPSTREAM` DOH servers
   torproxy:
     build:
       context: ./torproxy
     restart: unless-stopped
-    networks:
-      pihole_net:
-        ipv4_address: 10.0.0.4
     volumes:
       - type: volume
         source: var-lib-tor
         target: /var/lib/tor
+    networks:
+      pihole_net:
+        ipv4_address: 10.69.0.4
+
+# cloudflared handles using DOH, it is defered to by the pihole service for upstream DNS.
   cloudflared:
-    image: cloudflare/cloudflared:2021.11.0
+    image: cloudflare/cloudflared:2021.11.0 # no latest tag is provided, this may need manual updating...
     command: proxy-dns
     restart: unless-stopped
     environment:
-    - "HTTPS_PROXY=socks5://10.0.0.4:9050/"
+    - "HTTPS_PROXY=socks5://10.69.0.4:9050/" # torproxy should be used for HTTPS (I.E. DoH requests)
     - "TUNNEL_DNS_UPSTREAM=https://1.1.1.1/dns-query,https://1.0.0.1/dns-query"
     - "TUNNEL_DNS_PORT=5054"
-    - "TUNNEL_DNS_ADDRESS=10.0.0.2"
+    - "TUNNEL_DNS_ADDRESS=10.69.0.2"
     networks:
       pihole_net:
-        ipv4_address: 10.0.0.2
+        ipv4_address: 10.69.0.2
     depends_on:
       - torproxy
 
+# pihole provides DNS caching and configurable blocklists.
+# it also has a web interface for configuration, a random admin password is generated on first run.
   pihole:
     image: pihole/pihole
     restart: unless-stopped
@@ -34,25 +39,23 @@ services:
       - type: volume
         source: etc-dnsmasqd
         target: /etc/dnsmasq.d/
-        volume:
-          nocopy: true
       - type: volume
         source: etc-pihole
         target: /etc/pihole/
-        volume:
-          nocopy: true
-    ports:
-# Configure your LAN IP here
+#    ports:
+# Configure your docker/container hosts LAN IP here
 #      - "YOUR_LAN_IP_HERE:80:80/tcp"
 #      - "YOUR_LAN_IP_HERE:53:53/tcp"
 #      - "YOUR_LAN_IP_HERE:53:53/udp"
+# commented out to avoid exposing 0.0.0.0, this should only be bound to a non-internet routable IP (or with appropriate upstream firewall rules to limit access)
+# this avoids your DNS server being used in DNS amplification DDOS attacks. https://www.rapid7.com/db/vulnerabilities/dns-amplification/
     environment:
-      - ServerIP=10.0.0.3
-      - PIHOLE_DNS_=10.0.0.2#5054
-      - TZ=Europe/London
+      - ServerIP=10.69.0.3
+      - PIHOLE_DNS_=10.69.0.2#5054 # defer to cloudflared for DNS upstream.
+      - TZ=Europe/London # change this to suit your own TZ
     networks:
       pihole_net:
-        ipv4_address: 10.0.0.3
+        ipv4_address: 10.69.0.3
     dns:
       - 127.0.0.1
     depends_on:
@@ -62,7 +65,7 @@ networks:
   pihole_net:
     ipam:
       config:
-      - subnet: 10.0.0.0/29
+      - subnet: 10.69.0.0/29 # you'll want to ensure this subnet doesn't collide with any other subnet you're actually using on the host...
 
 volumes:
   etc-dnsmasqd:
