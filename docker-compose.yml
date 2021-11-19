@@ -14,21 +14,33 @@ services:
       pihole_net:
         ipv4_address: 10.69.0.4
 
-# cloudflared handles using DOH, it is defered to by the pihole service for upstream DNS.
-  cloudflared:
-    image: cloudflare/cloudflared:2021.11.0 # no latest tag is provided, this may need manual updating...
-    command: proxy-dns
+#cloudflared handles using DOH, it is defered to by the pihole service for upstream DNS.
+#  dohproxy:
+#    image: cloudflare/cloudflared:2021.11.0 # no latest tag is provided, this may need manual updating...
+#    command: proxy-dns
+#    restart: unless-stopped
+#    environment:
+#    - "HTTPS_PROXY=socks5://10.69.0.4:9050/" # torproxy should be used for HTTPS (I.E. DoH requests)
+#    - "TUNNEL_DNS_UPSTREAM=https://1.1.1.1/dns-query,https://1.0.0.1/dns-query"
+#    - "TUNNEL_DNS_PORT=5054"
+#    - "TUNNEL_DNS_ADDRESS=10.69.0.2"
+#    networks:
+#      pihole_net:
+#        ipv4_address: 10.69.0.2
+#    depends_on:
+#      - torproxy
+
+#dnscrypt-proxy handles using DOH, it is defered to by the pihole service for upstream DNS.
+  dohproxy:
+    build:
+      context: ./dnscrypt-proxy/
     restart: unless-stopped
-    environment:
-    - "HTTPS_PROXY=socks5://10.69.0.4:9050/" # torproxy should be used for HTTPS (I.E. DoH requests)
-    - "TUNNEL_DNS_UPSTREAM=https://1.1.1.1/dns-query,https://1.0.0.1/dns-query"
-    - "TUNNEL_DNS_PORT=5054"
-    - "TUNNEL_DNS_ADDRESS=10.69.0.2"
+    volumes:
+      - "./dnscrypt-proxy/dnscrypt-proxy.toml:/dnscrypt-proxy.toml"
     networks:
       pihole_net:
         ipv4_address: 10.69.0.2
-    depends_on:
-      - torproxy
+    
 
 # pihole provides DNS caching and configurable blocklists.
 # it also has a web interface for configuration, a random admin password is generated on first run.
@@ -59,7 +71,7 @@ services:
     dns:
       - 127.0.0.1
     depends_on:
-      - cloudflared
+      - dohproxy
 
 networks:
   pihole_net:
